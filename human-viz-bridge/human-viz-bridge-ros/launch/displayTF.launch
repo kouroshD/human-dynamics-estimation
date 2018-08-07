@@ -4,7 +4,7 @@
         <arg name="gui" default="False" />
         <arg name="vel" default="True" />
         <arg name="eff" default="True" />
-        <param name="robot_description" textfile="$(find human-viz-bridge-ros)/urdfs/Meri66DoF.urdf"  />
+        <param name="robot_description" textfile="$(find human-viz-bridge-ros)/urdf/Meri66DoF.urdf"  />
         <param name="use_gui" value="$(arg gui)"/>
     </group>
 </launch>

@@ -71,7 +71,12 @@ install(FILES package.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # Install the .launch file; this could go anywhere, but `launch` is a
 # good pattern to follow.
 file(GLOB LAUNCH_FILES ${PROJECT_SOURCE_DIR}/launch/*)
-install(FILES ${LAUNCH_FILES} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(FILES ${LAUNCH_FILES} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+# Install the .rviz file; this could go anywhere, but `rviz` is a
+# good pattern to follow
+file(GLOB LAUNCH_FILES ${PROJECT_SOURCE_DIR}/rviz/*)
+install(FILES ${LAUNCH_FILES} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)
 
 # Install the urdf files in a `urdfs` directory
 get_filename_component(PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
@@ -85,9 +90,9 @@ foreach (file  ${urdf_files})
   if(NOT ${dirname} STREQUAL ${URDF_DIR})
    file(RELATIVE_PATH relative_path ${URDF_DIR} ${file})
    get_filename_component(RELATIVE_PATH_DIR "${relative_path}" DIRECTORY)
-   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdfs/${RELATIVE_PATH_DIR}")
+   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf/${RELATIVE_PATH_DIR}")
   elseif(${dirname} STREQUAL ${URDF_DIR})
-   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdfs/")
+   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf/")
   endif()
 
   install(FILES ${file} DESTINATION ${OUTPUT_DIR})
