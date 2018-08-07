@@ -74,8 +74,25 @@ file(GLOB LAUNCH_FILES ${PROJECT_SOURCE_DIR}/launch/*)
 install(FILES ${LAUNCH_FILES} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # Install the urdf files in a `urdfs` directory
-file(GLOB URDF_FILES ${PROJECT_SOURCE_DIR}/urdfs/*)
-install(FILES ${URDF_FILES} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/urdfs)
+get_filename_component(PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
+get_filename_component(PARENT_DIR "${PARENT_DIR}" DIRECTORY)
+set(URDF_DIR "${PARENT_DIR}/app/urdfs")
+file (GLOB_RECURSE  urdf_files  ${URDF_DIR}/*.*)
+foreach (file  ${urdf_files})
+  get_filename_component(filename "${file}" NAME)
+  get_filename_component(dirname "${file}" DIRECTORY)
+
+  if(NOT ${dirname} STREQUAL ${URDF_DIR})
+   file(RELATIVE_PATH relative_path ${URDF_DIR} ${file})
+   get_filename_component(RELATIVE_PATH_DIR "${relative_path}" DIRECTORY)
+   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdfs/${RELATIVE_PATH_DIR}")
+  elseif(${dirname} STREQUAL ${URDF_DIR})
+   set(OUTPUT_DIR "${CATKIN_PACKAGE_SHARE_DESTINATION}/urdfs/")
+  endif()
+
+  install(FILES ${file} DESTINATION ${OUTPUT_DIR})
+
+endforeach()
 
 # Create an empty .catkin marker file, which causes
 # rosrun/roslaunch to look in <prefix>/lib/project for executables
