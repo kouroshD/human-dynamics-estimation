@@ -46,23 +46,9 @@ include_directories(
 
 link_directories(${catkin_LIBRARY_DIRS})
 
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME} src/human-viz-bridge-ros.cpp)
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}
-   ${catkin_LIBRARIES}
-)
-
 #############
 ## Install ##
 #############
-
-# Install the executables to <prefix>/lib/<project>, so that
-# they can be found by rosrun/roslaunch.
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 
 # Create a simple package.xml, which is necessary to be treated as
 # a ROS package.
