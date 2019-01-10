@@ -146,7 +146,7 @@ public:
     yarp::os::Value ikPoolOption;
     std::unique_ptr<HumanIKWorkerPool> ikPool;
     SolutionIK solution;
-    iDynTree::InverseKinematics ik;
+    std::vector<iDynTree::InverseKinematics> ik;
     std::string solverName;
 
     bool getJointAnglesFromInputData(iDynTree::VectorDynSize& jointAngles);
@@ -374,10 +374,13 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
 
     // Get the pairNames
     createEndEffectorsPairs(pImpl->humanModel, pImpl->segments, pairNames, pairSegmentIndeces);
-    pImpl->linkPairs.reserve(pairNames.size());
+    pImpl->linkPairs.resize(pairNames.size());
+
+    // Resizing ik vector
+    pImpl->ik.resize(pairNames.size());
 
     for (unsigned index = 0; index < pairNames.size(); ++index) {
-        LinkPairInfo pairInfo;
+        LinkPairInfo& pairInfo = pImpl->linkPairs[index];
 
         pairInfo.parentFrameName = pairNames[index].first;
         pairInfo.parentFrameSegmentsIndex = pairSegmentIndeces[index].first;
@@ -386,16 +389,16 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pairInfo.childFrameSegmentsIndex = pairSegmentIndeces[index].second;
 
         // Allocate the solver
-        pairInfo.ikSolver = std::make_unique<iDynTree::InverseKinematics>();
+//        pairInfo.ikSolver = std::make_unique<iDynTree::InverseKinematics>();
 
         // Set IK options
         // TODO Verify these  options
-        pairInfo.ikSolver->setVerbosity(1);
+        pairInfo.ikSolver.setVerbosity(1);
         //pairInfo.ikSolver->setMaxIterations(maxIterationsIK);
         //pairInfo.ikSolver->setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
         //pairInfo.ikSolver->setCostTolerance(1E-10);
 
-        pairInfo.ikSolver->setLinearSolverName(pImpl->solverName);
+        pairInfo.ikSolver.setLinearSolverName(pImpl->solverName);
         //yInfo() << " ik solver : " << pairInfo.ikSolver->linearSolverName();
 
         // Get the reduced model
@@ -406,18 +409,19 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
             continue;
         }
 
-        if (!pairInfo.ikSolver->setModel(pairInfo.pairModel)) {
+        //std::cout << "number of dofs in pair model : " << pairInfo.pairModel.getNrOfDOFs() << std::endl;
+        if (!pairInfo.ikSolver.setModel(pairInfo.pairModel)) {
             yWarning() << LogPrefix << "failed to configure IK solver for the segment pair" << pairInfo.parentFrameName.c_str()
                        << ", " << pairInfo.childFrameName.c_str() <<  " Skipping pair";
             continue;
         }
 
         // TODO Verify this option
-        pairInfo.ikSolver->setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+        pairInfo.ikSolver.setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
 
         // Add parent as fixed base constraint
         // TODO: Verify this
-        pairInfo.ikSolver->addFrameConstraint(pairInfo.parentFrameName, iDynTree::Transform::Identity());
+        pairInfo.ikSolver.addFrameConstraint(pairInfo.parentFrameName, iDynTree::Transform::Identity());
 
         // Get random initial joint positions
         // TODO: Verify this
@@ -428,7 +432,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         std::vector<std::string> solverJoints;
 
         // Set dummy Identiry transform as target
-        pairInfo.ikSolver->addTarget(pairInfo.childFrameName, iDynTree::Transform::Identity());
+        pairInfo.ikSolver.addTarget(pairInfo.childFrameName, iDynTree::Transform::Identity());
 
         // The size is typically 3 for the 3 DoFs between the links in linkPair
         solverJoints.resize(pairInfo.pairModel.getNrOfJoints());
@@ -476,14 +480,14 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         // Overwriting the default contructed object
         pairInfo.jacobianDecomposition = Eigen::ColPivHouseholderQR<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> >(pairInfo.relativeJacobian.rows(), pairInfo.relativeJacobian.cols());
 
-        pImpl->linkPairs.push_back(std::move(pairInfo));
+        //pImpl->linkPairs.push_back(std::move(pairInfo));
     }
 
     // =========================
     // INITIALIZE IK WORKER POOL
     // =========================
 
-    int ikPoolSize = 1; //default value
+    /*int ikPoolSize = 1; //default value
 
     // Get ikPoolSizeOption
     if (config.find("ikPoolSizeOption").isString() || config.find("ikPoolSizeOption").asString() == "auto" ) {
@@ -501,7 +505,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
     if (!pImpl->ikPool) {
         yError() << LogPrefix << "failed to create IK worker pool";
         return false;
-    }
+    }*/
 
     return true;
 }
@@ -650,15 +654,16 @@ bool HumanStateProvider::close()
 
 void HumanStateProvider::run()
 {
-    // Get the transformation of the links from the input data
-    if (!pImpl->getLinkTransformFromInputData(pImpl->linkTransformMatrices)) {
-        yError() << LogPrefix << "Failed to get link transforms from input data";
-        askToStop();
-        return;
-    }
+    std::lock_guard<std::mutex> lock(pImpl->mutex);
 
     {
-        std::lock_guard<std::mutex> lock(pImpl->mutex);
+
+        // Get the transformation of the links from the input data
+        if (!pImpl->getLinkTransformFromInputData(pImpl->linkTransformMatrices)) {
+            yError() << LogPrefix << "Failed to get link transforms from input data";
+            askToStop();
+            return;
+        }
 
         // Use the previous solution of joint configuration as new joint initial position
         for (auto& linkPair : pImpl->linkPairs) {
@@ -667,9 +672,78 @@ void HumanStateProvider::run()
             //yInfo() << "initial joint pos : " << linkPair.sInitial.toString();
         }
 
+        auto& linkPair = pImpl->linkPairs.at(0);
+        iDynTree::InverseKinematics ik;
+
+        ik.setVerbosity(5);
+        ik.setLinearSolverName(pImpl->solverName);
+
+        if (!ik.setModel(linkPair.pairModel)) {
+            yWarning() << LogPrefix << "failed to configure IK solver for the segment pair" << linkPair.parentFrameName.c_str()
+                       << ", " << linkPair.childFrameName.c_str() <<  " Skipping pair";
+        }
+
+        // TODO Verify this option
+        ik.setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+
+        // Add parent as fixed base constraint
+        ik.addFrameConstraint(linkPair.parentFrameName, iDynTree::Transform::Identity());
+
+        // Set dummy Identity transform as target
+        ik.addTarget(linkPair.childFrameName, iDynTree::Transform::Identity());
+
+        iDynTree::Transform parentTransform = pImpl->linkTransformMatrices.at(linkPair.parentFrameName);
+        iDynTree::Transform childTransform = pImpl->linkTransformMatrices.at(linkPair.childFrameName);
+        ik.setFullJointsInitialCondition(&(pImpl->linkTransformMatrices.at(linkPair.parentFrameName)), &(linkPair.sInitial));
+        iDynTree::Transform parent_H_target = parentTransform.inverse() * childTransform;
+        ik.updateTarget(linkPair.childFrameName, parent_H_target);
+
+        int result = ik.solve();
+        ik.getFullJointsSolution(linkPair.relativeTransformation, linkPair.jointConfigurations);
+        yInfo() << "parent name : " << linkPair.parentFrameName << " , child name : " << linkPair.childFrameName;
+        yInfo() << "IK Result : " << result << " ,Joint configuration : " << linkPair.jointConfigurations.toString();
+
+
+
+
+        /*size_t index = 0;
+        for(LinkPairInfo& linkPair: pImpl->linkPairs) {
+
+
+            pImpl->ik[index].setVerbosity(1);
+            pImpl->ik[index].setLinearSolverName(pImpl->solverName);
+
+            if (!pImpl->ik[index].setModel(linkPair.pairModel)) {
+                yWarning() << LogPrefix << "failed to configure IK solver for the segment pair" << linkPair.parentFrameName.c_str()
+                           << ", " << linkPair.childFrameName.c_str() <<  " Skipping pair";
+                continue;
+            }
+
+            // TODO Verify this option
+            pImpl->ik[index].setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+
+            // Add parent as fixed base constraint
+            pImpl->ik[index].addFrameConstraint(linkPair.parentFrameName, iDynTree::Transform::Identity());
+
+            // Set dummy Identiry transform as target
+            pImpl->ik[index].addTarget(linkPair.childFrameName, iDynTree::Transform::Identity());
+
+            iDynTree::Transform parentTransform = pImpl->linkTransformMatrices.at(linkPair.parentFrameName);
+            iDynTree::Transform childTransform = pImpl->linkTransformMatrices.at(linkPair.childFrameName);
+            pImpl->ik[index].setFullJointsInitialCondition(&(pImpl->linkTransformMatrices.at(linkPair.parentFrameName)), &(linkPair.sInitial));
+            iDynTree::Transform parent_H_target = parentTransform.inverse() * childTransform;
+            pImpl->ik[index].updateTarget(linkPair.childFrameName, parent_H_target);
+
+            int result = pImpl->ik[index].solve();
+            pImpl->ik[index].getFullJointsSolution(linkPair.relativeTransformation, linkPair.jointConfigurations);
+            yInfo() << "parent name : " << linkPair.parentFrameName << " , child name : " << linkPair.childFrameName;
+            yInfo() << "IK Result : " << result << " ,Joint configuration : " << linkPair.jointConfigurations.toString();
+
+            index++;
+        }*/
     }
 
-    {
+    /*{
         std::lock_guard<std::mutex> lock(pImpl->mutex);
 
         // Process incoming data
@@ -703,7 +777,7 @@ void HumanStateProvider::run()
 
             jointIndex += pairJoint.second;
         }
-    }
+    }*/
 
     // ===========================
     // EXPOSE DATA FOR IHUMANSTATE

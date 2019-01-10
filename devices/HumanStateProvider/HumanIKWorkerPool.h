@@ -42,7 +42,7 @@ struct LinkPairInfo {
     iDynTree::Transform relativeTransformation; // TODO: If this is wrt global frame
 
     // IK elements (i.e. compute joints)
-    std::shared_ptr<iDynTree::InverseKinematics> ikSolver;
+    iDynTree::InverseKinematics ikSolver;
 
     // Initial joint positions
     iDynTree::VectorDynSize sInitial;

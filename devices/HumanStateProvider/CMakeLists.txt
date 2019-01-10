@@ -5,6 +5,8 @@
 find_package(IWear REQUIRED)
 find_package(iDynTree REQUIRED)
 
+add_subdirectory(tests)
+
 yarp_prepare_plugin(human_state_provider
     TYPE hde::devices::HumanStateProvider
     INCLUDE HumanStateProvider.h

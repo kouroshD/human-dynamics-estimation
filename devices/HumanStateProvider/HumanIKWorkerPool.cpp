@@ -90,12 +90,12 @@ int HumanIKWorkerPool::computeIK(WorkerTaskData& task)
     // TODO: Update the parent child frame transformation handling
     // This should be updateTarget(?)
     // Double check with UnitTest
-    task.pairInfo.ikSolver->setFullJointsInitialCondition(&(task.parentFrameInfo.poseWRTWorld), &(task.sInitial));
+    task.pairInfo.ikSolver.setFullJointsInitialCondition(&(task.parentFrameInfo.poseWRTWorld), &(task.sInitial));
 
     iDynTree::Transform parent_H_target = task.parentFrameInfo.poseWRTWorld.inverse() * task.childFrameInfo.poseWRTWorld;
-    task.pairInfo.ikSolver->updateTarget(task.childFrameInfo.segmentName, parent_H_target);
+    task.pairInfo.ikSolver.updateTarget(task.childFrameInfo.segmentName, parent_H_target);
 
-    int result = task.pairInfo.ikSolver->solve();
+    int result = task.pairInfo.ikSolver.solve();
 
     //yInfo() << "parent name : " << task.parentFrameInfo.segmentName;
     //yInfo() << "transform : " << task.parentFrameInfo.poseWRTWorld.toString();
@@ -106,7 +106,7 @@ int HumanIKWorkerPool::computeIK(WorkerTaskData& task)
     // Get the last solution
     // TODO: Verify if relativeTransformation is stored correctly,
     // It gets baseTransformSolution	solution for the base position from getReducedSolution()
-    task.pairInfo.ikSolver->getFullJointsSolution(task.pairInfo.relativeTransformation, task.pairInfo.jointConfigurations);
+    task.pairInfo.ikSolver.getFullJointsSolution(task.pairInfo.relativeTransformation, task.pairInfo.jointConfigurations);
     //yInfo() << "Relative transformation : " << task.pairInfo.relativeTransformation.toString();
     //yInfo() << "computeIK linkPair, parent name : " << task.pairInfo.parentFrameName << ", child name : " << task.pairInfo.childFrameName;
     //yInfo() << "ComputeIK segment, parent name : " << task.parentFrameInfo.segmentName << ", child name : " << task.childFrameInfo.segmentName;
