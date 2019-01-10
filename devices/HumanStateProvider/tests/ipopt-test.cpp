@@ -246,7 +246,10 @@ int main()
     }
 
     {
+        yInfo() << "***********************************";
         yInfo() << "Solving for a single link pair...";
+        yInfo() << "***********************************";
+
         // Single linkPair processing
         LinkPairInfo& linkPair = linkPairs.at(0);
 
@@ -270,6 +273,7 @@ int main()
         ik.setVerbosity(1);
         ik.setLinearSolverName("ma27");
         ik.setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+        ik.setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
 
         // Set ik model
         if (!ik.setModel(linkPair.pairModel)) {
@@ -279,11 +283,9 @@ int main()
 
         // Add parent link as fixed base constraint with identity transform
         ik.addFrameConstraint(linkPair.parentFrameName, iDynTree::Transform::Identity());
-        yInfo() << "frame constraint added";
 
         // Add child link as a target and set initial transform to be identity
         ik.addTarget(linkPair.childFrameName, iDynTree::Transform::Identity());
-        yInfo() << "target added";
 
         // Set initial conditions
         ik.setFullJointsInitialCondition(&(parentTransform), &(linkPair.sInitial));
@@ -307,7 +309,69 @@ int main()
 
     }
 
-    const size_t nrOfJoints = humanModel.getNrOfJoints();
+    {
+        yInfo() << "************************************";
+        yInfo() << "Solving for a all the link pairs...";
+        yInfo() << "************************************";
+
+        for (auto& linkPair : linkPairs) {
+
+            // Set known tranforms for parent and child links
+            iDynTree::Position parentPos(1,1,1);
+            iDynTree::Rotation parentRot(1,0,0,0,1,0,0,0,1);
+            iDynTree::Transform parentTransform(parentRot, parentPos);
+
+            iDynTree::Position childPos(1,1,1.5);
+            iDynTree::Rotation childRot(-1,0,0,0,-1,0,0,0,1); // Set this to be rotation about z by pi
+            iDynTree::Transform childTransform(childRot, childPos);
+
+            // Set initial joint positions to zero
+            linkPair.sInitial.zero();
+            yInfo() << "Initial joint positions : " << linkPair.sInitial.toString();
+
+            // Create an instance of ik
+            iDynTree::InverseKinematics ik;
+
+            // Set ik parameters
+            ik.setVerbosity(1);
+            ik.setLinearSolverName("ma27");
+            ik.setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+            ik.setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
+
+            // Set ik model
+            if (!ik.setModel(linkPair.pairModel)) {
+                yWarning() << "failed to configure IK solver for the segment pair" << linkPair.parentFrameName.c_str()
+                           << ", " << linkPair.childFrameName.c_str() <<  " Skipping pair";
+            }
+
+            // Add parent link as fixed base constraint with identity transform
+            ik.addFrameConstraint(linkPair.parentFrameName, iDynTree::Transform::Identity());
+
+            // Add child link as a target and set initial transform to be identity
+            ik.addTarget(linkPair.childFrameName, iDynTree::Transform::Identity());
+
+            // Set initial conditions
+            ik.setFullJointsInitialCondition(&(parentTransform), &(linkPair.sInitial));
+
+            // Get the relative transform
+            iDynTree::Transform parent_H_target = parentTransform.inverse() * childTransform;
+
+            // Update the child target
+            ik.updateTarget(linkPair.childFrameName, parent_H_target);
+
+            int result = ik.solve();
+
+            // Get optimization solution
+            iDynTree::Transform outputTransform; // This name is not clear
+            iDynTree::VectorDynSize jointConfigurationSolution;
+            jointConfigurationSolution.resize(linkPair.sInitial.size());
+
+            ik.getFullJointsSolution(outputTransform, jointConfigurationSolution);
+            yInfo() << "parent name : " << linkPair.parentFrameName << " , child name : " << linkPair.childFrameName;
+            yInfo() << "IK Result : " << result << " ,Joint configuration : " << linkPair.jointConfigurations.toString();
+
+        }
+    }
 
     return 0;
 
@@ -418,7 +482,7 @@ static bool getReducedModel(const iDynTree::Model& modelInput,
     iDynTree::LinkIndex visitedLink = modelInput.getFrameLink(endEffectorFrameIndex);
 
     while (visitedLink != traversal.getBaseLink()->getIndex())
-    {
+    {        
         parentLinkIdx = traversal.getParentLinkFromLinkIndex(visitedLink)->getIndex();
         joint = traversal.getParentJointFromLinkIndex(visitedLink);
 
