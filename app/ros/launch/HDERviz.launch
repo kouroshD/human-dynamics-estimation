@@ -4,22 +4,21 @@
         <arg name="gui" default="False"/>
         <arg name="vel" default="True"/>
         <arg name="eff" default="True"/>
-        <arg name="humanModel" default="$(find HDERviz)/urdfs/Claudia66DoF.urdf"/>
+    <!--    <arg name="humanModel" default="$(find HDERviz)/urdfs/Claudia66DoF_PILimit.urdf"/>
         <arg name="rvizconfig" default="$(find HDERviz)/rviz/HDERviz.rviz" />
+-->
+        <param name="robot_description" command="/Users/kdarvish/Desktop/icub_ws/HDE/human-dynamics-estimation/app/urdfs/Claudia66DoF_PILimit.urdf" />
+        <param name="use_gui" value="False"/>
 
-        <param name="robot_description" command="$(find xacro)/xacro.py $(arg humanModel)" />
-        <param name="use_gui" value="$(arg gui)"/>
-
-        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+        <node name="rviz" pkg="rviz" type="rviz" args="-d /Users/kdarvish/Desktop/icub_ws/HDE/human-dynamics-estimation/app/rviz/Human.rviz" required="true" />
 
         <!-- Configure the robot_state_publisher node -->
         <!-- This is the old method. Now we use the idyntree module -->
         <!--
-              yarprobotstatepublisher - -tfPrefix /Human/ - -model Claudia66DoF_Dec2017.urdf
-                  - -base-frame Pelvis - -jointstates-topic "/Human/joint_states"
+              yarprobotstatepublisher --tfPrefix /Human/ --model Claudia66DoF_Dec2017.urdf --base-frame Pelvis --jointstates-topic "/Human/joint_states"
         -->
     </group>
-    <group ns="RobotGroup">
+ <!--    <group ns="RobotGroup">
         <arg name="Robot" />
         <arg name="gui" default="False" />
         <arg name="vel" default="True" />
@@ -30,5 +29,5 @@
         <param name="robot_description" command="$(find xacro)/xacro.py $(arg robotModel)" />
 
         <param name="tf_prefix" value="robot" type="str"/>
-    </group>
+    </group> -->
 </launch>
