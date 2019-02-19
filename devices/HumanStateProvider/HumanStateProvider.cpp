@@ -131,6 +131,7 @@ public:
     // Model variables
     iDynTree::Model humanModel;
     FloatingBaseName floatingBaseFrame;
+    int totalRealJointsForIK;
 
     std::vector<SegmentInfo> segments;
     std::vector<LinkPairInfo> linkPairs;
@@ -376,20 +377,6 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
 
     const size_t nrOfJoints = pImpl->humanModel.getNrOfJoints();
 
-    pImpl->solution.jointPositions.resize(nrOfJoints);
-    pImpl->solution.jointVelocities.resize(nrOfJoints);
-
-    pImpl->jointAngles.resize(nrOfJoints);
-    pImpl->jointAngles.zero();
-
-    pImpl->linkPairsJointConfigurationSolution.resize(nrOfJoints);
-    pImpl->linkPairsJointConfigurationSolution.zero();
-
-    pImpl->globalJointConfigurationSolution.resize(nrOfJoints);
-    pImpl->globalJointConfigurationSolution.zero();
-
-    pImpl->jointVelocitiesSolution.resize(nrOfJoints);
-    pImpl->jointVelocitiesSolution.zero();
 
     // Get the model link names according to the modelToWearable link sensor map
     const size_t nrOfSegments = pImpl->wearableStorage.modelToWearable_LinkName.size();
@@ -508,6 +495,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
 
             // Save location index and length of each DoFs
             pairInfo.consideredJointLocations.push_back(std::pair<size_t, size_t>(joint->getDOFsOffset(), joint->getNrOfDOFs()));
+
         }
 
         // Set the joint configurations size and initialize to zero
@@ -542,6 +530,32 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         // Move the link pair instance into the vector
         pImpl->linkPairs.push_back(std::move(pairInfo));
     }
+
+   pImpl->totalRealJointsForIK=0;
+   for(auto& linkPair : pImpl->linkPairs)
+   {
+       pImpl->totalRealJointsForIK=pImpl->totalRealJointsForIK+linkPair.pairModel.getNrOfJoints();
+   }
+   yInfo()<< "Total Real Joints:"<<pImpl->totalRealJointsForIK;
+
+   pImpl->solution.jointPositions.resize(pImpl->totalRealJointsForIK);
+   pImpl->solution.jointVelocities.resize(pImpl->totalRealJointsForIK);
+
+   pImpl->jointAngles.resize(pImpl->totalRealJointsForIK);
+   pImpl->jointAngles.zero();
+
+   pImpl->linkPairsJointConfigurationSolution.resize(pImpl->totalRealJointsForIK);
+   pImpl->linkPairsJointConfigurationSolution.zero();
+
+   pImpl->globalJointConfigurationSolution.resize(pImpl->totalRealJointsForIK);
+   pImpl->globalJointConfigurationSolution.zero();
+
+   pImpl->jointVelocitiesSolution.resize(pImpl->totalRealJointsForIK);
+   pImpl->jointVelocitiesSolution.zero();
+
+
+
+
 
     // =========================
     // INITIALIZE IK WORKER POOL
@@ -818,6 +832,7 @@ void HumanStateProvider::run()
             for (auto& pairJoint : linkPair.consideredJointLocations) {
 
                 // Check if it is a valid 1 DoF joint
+
                 if (pairJoint.second == 1) {
 
                     // If global ik is false, use link pair joint solutions
@@ -840,6 +855,8 @@ void HumanStateProvider::run()
 
             }
         }
+
+
 
         // Get base transform from the suit
         iDynTree::Transform measuredBaseTransform;
@@ -1250,7 +1267,9 @@ std::vector<std::string> HumanStateProvider::getJointNames() const
     std::vector<std::string> jointNames;
 
     for (size_t jointIndex = 0; jointIndex < pImpl->humanModel.getNrOfJoints(); ++jointIndex) {
+        if(pImpl->humanModel.getJoint(jointIndex)->getNrOfDOFs()==1){
         jointNames.emplace_back(pImpl->humanModel.getJointName(jointIndex));
+        }
     }
 
     return jointNames;
@@ -1259,7 +1278,7 @@ std::vector<std::string> HumanStateProvider::getJointNames() const
 size_t HumanStateProvider::getNumberOfJoints() const
 {
     std::lock_guard<std::mutex> lock(pImpl->mutex);
-    return pImpl->humanModel.getNrOfJoints();
+    return pImpl->totalRealJointsForIK;
 }
 
 std::vector<double> HumanStateProvider::getJointPositions() const
