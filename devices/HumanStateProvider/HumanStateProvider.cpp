@@ -795,7 +795,14 @@ void HumanStateProvider::run()
 
         // Set the initial solution to zero
         for (auto& linkPair : pImpl->linkPairs) {
-            linkPair.sInitial.zero();
+            //linkPair.sInitial.zero();
+            for(int i=0; i<linkPair.pairModel.getNrOfJoints();i++)
+            {
+                double minJointLimit=linkPair.pairModel.getJoint(i)->getMinPosLimit(i);
+                double maxJointLimit=linkPair.pairModel.getJoint(i)->getMaxPosLimit(i);
+                double averageJointLimit=(minJointLimit+maxJointLimit)/2.0;
+                linkPair.sInitial.setVal(i,averageJointLimit );
+            }
         }
 
     }
