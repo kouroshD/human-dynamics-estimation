@@ -438,7 +438,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pairInfo.ikSolver->setVerbosity(1);
         pairInfo.ikSolver->setLinearSolverName(pImpl->solverName);
         pairInfo.ikSolver->setMaxIterations(maxIterationsIK);
-        pairInfo.ikSolver->setCostTolerance(1E-10);
+        pairInfo.ikSolver->setCostTolerance(costTolerance);
         pairInfo.ikSolver->setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
         pairInfo.ikSolver->setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
 
@@ -474,6 +474,9 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
 
         // Set initial joint positions size
         pairInfo.sInitial.resize(pairInfo.pairModel.getNrOfJoints());
+
+        // TODO: This is a new addition
+        pairInfo.sInitial.zero();
 
         // Obtain the joint location index in full model and the lenght of DoFs i.e joints map
         // This information will be used to put the IK solutions together for the full model
@@ -794,7 +797,7 @@ void HumanStateProvider::run()
         std::lock_guard<std::mutex> lock(pImpl->mutex);
 
         // Set the initial solution to zero
-        for (auto& linkPair : pImpl->linkPairs) {
+        /*for (auto& linkPair : pImpl->linkPairs) {
             //linkPair.sInitial.zero();
             for(int i=0; i<linkPair.pairModel.getNrOfJoints();i++)
             {
@@ -803,7 +806,7 @@ void HumanStateProvider::run()
                 double averageJointLimit=(minJointLimit+maxJointLimit)/2.0;
                 linkPair.sInitial.setVal(i,averageJointLimit );
             }
-        }
+        }*/
 
     }
 
@@ -854,6 +857,7 @@ void HumanStateProvider::run()
                     // If global ik is false, use link pair joint solutions
                     if (!pImpl->useGlobalIK) {
                         pImpl->solution.jointPositions[pairJoint.first] = linkPair.jointConfigurations.getVal(jointIndex);
+                        linkPair.sInitial.setVal(jointIndex, linkPair.jointConfigurations.getVal(jointIndex));
 
                         //TODO: Set the correct velocities values
                         pImpl->solution.jointVelocities[pairJoint.first] = 0;
