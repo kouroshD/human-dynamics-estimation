@@ -7,6 +7,10 @@
         <param name="refSpeed">15</param>
         <param name="samplingTime">0.05</param>
         <param name="smoothingTime">1</param>
+<!--
+        <param name="controlMode">position</param>
+        <param name="refSpeed">10</param>
+-->
         <param name="controlBoardsList">(head torso left_arm right_arm left_leg right_leg)</param>
         <param name="remotePrefix">/icubSim</param>
         <param name="localPrefix">/robotPositionController</param>

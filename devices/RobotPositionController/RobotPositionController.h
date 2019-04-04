@@ -9,9 +9,10 @@
 #ifndef HDE_DEVICES_ROBOTPOSITIONCONTROLLER
 #define HDE_DEVICES_ROBOTPOSITIONCONTROLLER
 
+#include <vector>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/Wrapper.h>
+#include <yarp/os/PeriodicThread.h>
 
 #include <memory>
 
@@ -22,14 +23,17 @@ namespace hde {
 } // namespace hde
 
 class hde::devices::RobotPositionController final
-        : public yarp::dev::DeviceDriver
-        , public yarp::dev::IWrapper
-        , public yarp::dev::IMultipleWrapper
-        , public yarp::os::PeriodicThread
+    : public yarp::dev::DeviceDriver
+    , public yarp::dev::IWrapper
+    , public yarp::dev::IMultipleWrapper
+    , public yarp::os::PeriodicThread
 {
 private:
     class impl;
     std::unique_ptr<impl> pImpl;
+
+    std::vector<double> m_prevJointValues;
+    int m_count;
 
 public:
     RobotPositionController();
