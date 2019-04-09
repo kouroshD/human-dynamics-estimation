@@ -31,15 +31,25 @@ class hde::devices::HumanStateProvider final
     , public hde::interfaces::IHumanState
 {
 private:
-    class impl; /**< a class that implements methods for HumanStateProvider(HSP) */
-    std::unique_ptr<impl> pImpl;
+    class impl; /**< the decleration of a class that implements methods for HumanStateProvider(HSP) */
+    std::unique_ptr<impl> pImpl; /**< the decleration of a class that implements methods for HumanStateProvider(HSP) */
 
 public:
     HumanStateProvider();
     ~HumanStateProvider() override;
 
     // DeviceDriver interface
+    
+    /**
+     * @brief open configure the class variables
+     * @param config the input configuration files
+     * @return
+     */
     bool open(yarp::os::Searchable& config) override;
+    /**
+     * @brief closing method
+     * @return
+     */
     bool close() override;
 
     // PeriodicThread

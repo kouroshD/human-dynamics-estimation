@@ -87,6 +87,9 @@ bool HumanStateWrapper::close()
 void HumanStateWrapper::run()
 {
     // Get data from the interface
+
+    std::array<double, 3> CoMPositionInterface = pImpl->humanState->getCoMPosition();
+    std::array<double, 3> CoMVelocityInterface = pImpl->humanState->getCoMVelocity();
     std::array<double, 3> basePositionInterface = pImpl->humanState->getBasePosition();
     std::array<double, 4> baseOrientationInterface = pImpl->humanState->getBaseOrientation();
     std::array<double, 6> baseVelocity = pImpl->humanState->getBaseVelocity();
@@ -97,6 +100,14 @@ void HumanStateWrapper::run()
 
     // Prepare the message
     human::HumanState& humanStateData = pImpl->outputPort.prepare();
+
+    // Convert the COM position
+    humanStateData.CoMPositionWRTGlobal = {
+        CoMPositionInterface[0], CoMPositionInterface[1], CoMPositionInterface[2]};
+
+    // Convert the COM position
+    humanStateData.CoMVelocityWRTGlobal = {
+        CoMVelocityInterface[0], CoMVelocityInterface[1], CoMVelocityInterface[2]};
 
     // Convert the base position
     humanStateData.baseOriginWRTGlobal = {
@@ -156,13 +167,13 @@ bool HumanStateWrapper::attach(yarp::dev::PolyDriver* poly)
     // ===================
     // CHECK THE INTERFACE
     // ===================
-yInfo()<<pImpl->humanState->getNumberOfJoints() <<" "<< pImpl->humanState->getJointNames().size();
+    yInfo() << pImpl->humanState->getNumberOfJoints() << " "
+            << pImpl->humanState->getJointNames().size();
 
-//std::vector<std::string> jointNames=pImpl->humanState->getJointNames();
-for(int i=0;i<pImpl->humanState->getJointNames().size();i++)
-{
-    yInfo()<<"Joint name ("<<i<<"): "<< pImpl->humanState->getJointNames()[i];
-}
+    // std::vector<std::string> jointNames=pImpl->humanState->getJointNames();
+    for (int i = 0; i < pImpl->humanState->getJointNames().size(); i++) {
+        yInfo() << "Joint name (" << i << "): " << pImpl->humanState->getJointNames()[i];
+    }
 
     if (pImpl->humanState->getNumberOfJoints() == 0
         || pImpl->humanState->getNumberOfJoints() != pImpl->humanState->getJointNames().size()) {

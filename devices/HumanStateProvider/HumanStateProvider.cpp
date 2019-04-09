@@ -90,6 +90,9 @@ struct SolutionIK
 
     std::array<double, 6> baseVelocity;
 
+    std::array<double, 3> CoMPosition;
+    std::array<double, 3> CoMVelocity;
+
     void clear()
     {
         jointPositions = {};
@@ -1212,6 +1215,16 @@ void HumanStateProvider::run()
                                         pImpl->baseVelocitySolution.getVal(4),
                                         pImpl->baseVelocitySolution.getVal(5)};
     }
+    {
+        iDynTree::KinDynComputations* computations = pImpl->kinDynComputations.get();
+        pImpl->solution.CoMPosition = {computations->getCenterOfMassPosition().getVal(0),
+                                       computations->getCenterOfMassPosition().getVal(1),
+                                       computations->getCenterOfMassPosition().getVal(2)};
+
+        pImpl->solution.CoMVelocity = {computations->getCenterOfMassVelocity().getVal(0),
+                                       computations->getCenterOfMassVelocity().getVal(1),
+                                       computations->getCenterOfMassVelocity().getVal(2)};
+    }
 
     // compute the inverse kinematic errors
     pImpl->computeLinksOrientationErrors(pImpl->linkTransformMatrices,
@@ -1843,6 +1856,18 @@ std::array<double, 3> HumanStateProvider::getBasePosition() const
 {
     std::lock_guard<std::mutex> lock(pImpl->mutex);
     return pImpl->solution.basePosition;
+}
+
+std::array<double, 3> HumanStateProvider::getCoMPosition() const
+{
+    std::lock_guard<std::mutex> lock(pImpl->mutex);
+    return pImpl->solution.CoMPosition;
+}
+
+std::array<double, 3> HumanStateProvider::getCoMVelocity() const
+{
+    std::lock_guard<std::mutex> lock(pImpl->mutex);
+    return pImpl->solution.CoMVelocity;
 }
 
 // This method returns the all link pair names from the full human model

@@ -28,7 +28,7 @@
         <param name="rotTargetWeight">10</param>
         <param name="costRegularization">1.0</param>
         <!-- 0.25 -->
-        <param name="costTolerance">0.01</param>
+        <param name="costTolerance">1e-10</param>
         <param name="useGlobalIK">false</param>
         <param name="useXsensJointsAngles">false</param>
         <!-- TODO: How to use a reduced model in the entire HDE? (Starting from HumanStateProvider) -->
