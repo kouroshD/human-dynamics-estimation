@@ -28,7 +28,7 @@
         <param name="rotTargetWeight">10.0</param>
         <param name="linVelTargetWeight">0.0</param>
         <param name="angVelTargetWeight">1.0</param>
-        <param name="costRegularization">1.0</param>
+        <param name="costRegularization">0.01</param>
         <!-- 0.25 -->
         <param name="costTolerance">0.001</param>
         <param name="useGlobalIK">false</param>
@@ -158,7 +158,7 @@
         <action phase="shutdown" level="5" type="detach"/>
     </device>
 
-    <!--device type="human_state_publisher" name="HumanStatePublisher">
+    <device type="human_state_publisher" name="HumanStatePublisher">
         <param name="period">0.020</param>
         <param name="baseTFName">/Human/Pelvis</param>
         <param name="humanJointsTopic">/Human/joint_states</param>
@@ -168,9 +168,9 @@
             </paramlist>
         </action>
         <action phase="shutdown" level="5" type="detach"/>
-    </device-->
+    </device>
 
-    <device type="robot_position_controller" name="RobotPositionController">
+    <!--device type="robot_position_controller" name="RobotPositionController">
         <param name="period">0.100</param>
         <param name="controlMode">positionDirect</param>
         <param name="refSpeed">15.0</param>
@@ -191,7 +191,7 @@
             </paramlist>
         </action>
         <action phase="shutdown" level="5" type="detach"/>
-    </device>
+    </device-->
 
 
 </robot>

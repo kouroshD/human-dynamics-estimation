@@ -767,6 +767,15 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
             yError() << LogPrefix << "failed to create IK worker pool";
             return false;
         }
+        for (auto& linkPair : pImpl->linkPairs) {
+            // linkPair.sInitial.zero();
+            for (size_t i = 0; i < linkPair.pairModel.getNrOfJoints(); i++) {
+                double minJointLimit = linkPair.pairModel.getJoint(i)->getMinPosLimit(i);
+                double maxJointLimit = linkPair.pairModel.getJoint(i)->getMaxPosLimit(i);
+                double averageJointLimit = (minJointLimit + maxJointLimit) / 2.0;
+                linkPair.sInitial.setVal(i, averageJointLimit);
+            }
+        }
     }
 
     // ====================
@@ -922,15 +931,16 @@ void HumanStateProvider::run()
             std::lock_guard<std::mutex> lock(pImpl->mutex);
 
             // Set the initial solution to zero
-            for (auto& linkPair : pImpl->linkPairs) {
-                // linkPair.sInitial.zero();
-                for (size_t i = 0; i < linkPair.pairModel.getNrOfJoints(); i++) {
-                    double minJointLimit = linkPair.pairModel.getJoint(i)->getMinPosLimit(i);
-                    double maxJointLimit = linkPair.pairModel.getJoint(i)->getMaxPosLimit(i);
-                    double averageJointLimit = (minJointLimit + maxJointLimit) / 2.0;
-                    linkPair.sInitial.setVal(i, averageJointLimit);
-                }
-            }
+            //            for (auto& linkPair : pImpl->linkPairs) {
+            //                // linkPair.sInitial.zero();
+            //                for (size_t i = 0; i < linkPair.pairModel.getNrOfJoints(); i++) {
+            //                    double minJointLimit =
+            //                    linkPair.pairModel.getJoint(i)->getMinPosLimit(i); double
+            //                    maxJointLimit = linkPair.pairModel.getJoint(i)->getMaxPosLimit(i);
+            //                    double averageJointLimit = (minJointLimit + maxJointLimit) / 2.0;
+            //                    linkPair.sInitial.setVal(i, averageJointLimit);
+            //                }
+            //            }
         }
 
         {
