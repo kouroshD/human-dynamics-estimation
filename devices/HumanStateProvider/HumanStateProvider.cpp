@@ -312,8 +312,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pImpl->ikSolver = SolverIK::pairwised;
     else if (solverName == "integrationbased")
         pImpl->ikSolver = SolverIK::integrationbased;
-    else
-    {
+    else {
         yError() << LogPrefix << "ikSolver " << solverName << " not found";
         return false;
     }
@@ -377,8 +376,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         }
     }
 
-    if (pImpl->ikSolver == SolverIK::pairwised || pImpl->ikSolver == SolverIK::global)
-    {
+    if (pImpl->ikSolver == SolverIK::pairwised || pImpl->ikSolver == SolverIK::global) {
         if (!(config.check("allowIKFailures") && config.find("allowIKFailures").isBool())) {
             yError() << LogPrefix << "allowFailures option not found or not valid";
             return false;
@@ -419,9 +417,9 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pImpl->costRegularization = config.find("costRegularization").asDouble();
     }
 
-    if (pImpl->ikSolver == SolverIK::global || pImpl->ikSolver == SolverIK::integrationbased)
-    {
-        if (!(config.check("useDirectBaseMeasurement") && config.find("useDirectBaseMeasurement").isBool())) {
+    if (pImpl->ikSolver == SolverIK::global || pImpl->ikSolver == SolverIK::integrationbased) {
+        if (!(config.check("useDirectBaseMeasurement")
+              && config.find("useDirectBaseMeasurement").isBool())) {
             yError() << LogPrefix << "useDirectBaseMeasurement option not found or not valid";
             return false;
         }
@@ -442,9 +440,10 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pImpl->angVelTargetWeight = config.find("angVelTargetWeight").asFloat64();
     }
 
-    if (pImpl->ikSolver == SolverIK::pairwised)
-    {
-        if (!(config.check("ikPoolSizeOption") && (config.find("ikPoolSizeOption").isString() || config.find("ikPoolSizeOption").isInt()))) {
+    if (pImpl->ikSolver == SolverIK::pairwised) {
+        if (!(config.check("ikPoolSizeOption")
+              && (config.find("ikPoolSizeOption").isString()
+                  || config.find("ikPoolSizeOption").isInt()))) {
             yError() << LogPrefix << "ikPoolOption option not found or not valid";
             return false;
         }
@@ -471,9 +470,9 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         pImpl->useDirectBaseMeasurement = true;
     }
 
-    if (pImpl->ikSolver == SolverIK::integrationbased)
-    {
-        if (!(config.check("integrationBasedIKCorrectionGainsLinRot") && config.find("integrationBasedIKCorrectionGainsLinRot").isList()
+    if (pImpl->ikSolver == SolverIK::integrationbased) {
+        if (!(config.check("integrationBasedIKCorrectionGainsLinRot")
+              && config.find("integrationBasedIKCorrectionGainsLinRot").isList()
               && config.find("integrationBasedIKCorrectionGainsLinRot").asList()->size() == 2)) {
             yError() << LogPrefix
                      << "integrationBasedIKCorrectionGainsLinRot option not found or not valid";
@@ -513,9 +512,9 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
     yInfo() << LogPrefix << "*** Urdf file name                   :" << urdfFileName;
     yInfo() << LogPrefix << "*** Ik solver                        :" << solverName;
     yInfo() << LogPrefix << "*** Use Xsens joint angles           :" << pImpl->useXsensJointsAngles;
-    yInfo() << LogPrefix << "*** Use Directly base measurement    :" << pImpl->useDirectBaseMeasurement;
-    if (pImpl->ikSolver == SolverIK::pairwised || pImpl->ikSolver == SolverIK::global)
-    {
+    yInfo() << LogPrefix
+            << "*** Use Directly base measurement    :" << pImpl->useDirectBaseMeasurement;
+    if (pImpl->ikSolver == SolverIK::pairwised || pImpl->ikSolver == SolverIK::global) {
         yInfo() << LogPrefix << "*** Allow IK failures                :" << pImpl->allowIKFailures;
         yInfo() << LogPrefix << "*** Max IK iterations                :" << pImpl->maxIterationsIK;
         yInfo() << LogPrefix << "*** Cost Tolerance                   :" << pImpl->costTolerance;
@@ -526,12 +525,15 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
                 << "*** Cost regularization              :" << pImpl->costRegularization;
         yInfo() << LogPrefix << "*** Size of thread pool              :" << pImpl->ikPoolSize;
     }
-    if (pImpl->ikSolver == SolverIK::integrationbased)
-    {
-        yInfo() << LogPrefix << "*** Linear correction gain           :" << pImpl->integrationBasedIKLinearCorrectionGain;
-        yInfo() << LogPrefix << "*** Angular correction gain          :" << pImpl->integrationBasedIKAngularCorrectionGain;
-        yInfo() << LogPrefix << "*** Linear integral correction gain  :" << pImpl->integrationBasedIKIntegralLinearCorrectionGain;
-        yInfo() << LogPrefix << "*** Angular integral correction gain :" << pImpl->integrationBasedIKIntegralAngularCorrectionGain;
+    if (pImpl->ikSolver == SolverIK::integrationbased) {
+        yInfo() << LogPrefix << "*** Linear correction gain           :"
+                << pImpl->integrationBasedIKLinearCorrectionGain;
+        yInfo() << LogPrefix << "*** Angular correction gain          :"
+                << pImpl->integrationBasedIKAngularCorrectionGain;
+        yInfo() << LogPrefix << "*** Linear integral correction gain  :"
+                << pImpl->integrationBasedIKIntegralLinearCorrectionGain;
+        yInfo() << LogPrefix << "*** Angular integral correction gain :"
+                << pImpl->integrationBasedIKIntegralAngularCorrectionGain;
     }
     yInfo() << LogPrefix << "*** ==================================";
 
@@ -567,6 +569,7 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
     pImpl->kinDynComputations =
         std::unique_ptr<iDynTree::KinDynComputations>(new iDynTree::KinDynComputations());
     pImpl->kinDynComputations->loadRobotModel(modelLoader.model());
+    pImpl->kinDynComputations->setFloatingBase(pImpl->floatingBaseFrame.model);
 
     // =========================
     // INITIALIZE JOINTS BUFFERS
@@ -664,15 +667,12 @@ void HumanStateProvider::run()
     }
 
     // check if inverse kinematics failed
-    if (inverseKinematicsFailure)
-    {
-        if (pImpl->allowIKFailures)
-        {
+    if (inverseKinematicsFailure) {
+        if (pImpl->allowIKFailures) {
             yWarning() << LogPrefix << "IK failed, keeping the previous solution";
             return;
         }
-        else
-        {
+        else {
             yError() << LogPrefix << "Failed to solve IK";
             askToStop();
         }
@@ -718,7 +718,8 @@ void HumanStateProvider::run()
                                         pImpl->baseVelocitySolution.getVal(5)};
     }
 
-    // compute the inverse kinematic errors (currently the result is unused, but it may be used for evaluating the IK performance)
+    // compute the inverse kinematic errors (currently the result is unused, but it may be used for
+    // evaluating the IK performance)
     // pImpl->computeLinksOrientationErrors(pImpl->linkTransformMatrices,
     //                                      pImpl->jointConfigurationSolution,
     //                                      pImpl->baseTransformSolution,
@@ -901,7 +902,7 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         std::string modelLinkName = humanModel.getLinkName(linkIndex);
 
         if (wearableStorage.modelToWearable_LinkName.find(modelLinkName)
-                == wearableStorage.modelToWearable_LinkName.end()) {
+            == wearableStorage.modelToWearable_LinkName.end()) {
             continue;
         }
 
@@ -909,13 +910,13 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         // segments[segmentIndex].velocities.zero();
 
         // Store the name of the link as segment name
-        segments[segmentIndex].segmentName =  modelLinkName;
+        segments[segmentIndex].segmentName = modelLinkName;
         segmentIndex++;
     }
 
     // Get all the possible pairs composing the model
     std::vector<std::pair<std::string, std::string>> pairNames;
-    std::vector<std::pair<iDynTree::FrameIndex, iDynTree::FrameIndex> > pairSegmentIndeces;
+    std::vector<std::pair<iDynTree::FrameIndex, iDynTree::FrameIndex>> pairSegmentIndeces;
 
     // Get the link pair names
     createEndEffectorsPairs(humanModel, segments, pairNames, pairSegmentIndeces);
@@ -931,10 +932,14 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         pairInfo.childFrameSegmentsIndex = pairSegmentIndeces[index].second;
 
         // Get the reduced pair model
-        if (!getReducedModel(humanModel, pairInfo.parentFrameName, pairInfo.childFrameName, pairInfo.pairModel)) {
+        if (!getReducedModel(humanModel,
+                             pairInfo.parentFrameName,
+                             pairInfo.childFrameName,
+                             pairInfo.pairModel)) {
 
-            yWarning() << LogPrefix << "failed to get reduced model for the segment pair " << pairInfo.parentFrameName.c_str()
-                       << ", " << pairInfo.childFrameName.c_str();
+            yWarning() << LogPrefix << "failed to get reduced model for the segment pair "
+                       << pairInfo.parentFrameName.c_str() << ", "
+                       << pairInfo.childFrameName.c_str();
             continue;
         }
 
@@ -946,18 +951,22 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         pairInfo.ikSolver->setLinearSolverName(linearSolverName);
         pairInfo.ikSolver->setMaxIterations(maxIterationsIK);
         pairInfo.ikSolver->setCostTolerance(costTolerance);
-        pairInfo.ikSolver->setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
-        pairInfo.ikSolver->setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
+        pairInfo.ikSolver->setDefaultTargetResolutionMode(
+            iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
+        pairInfo.ikSolver->setRotationParametrization(
+            iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
 
         // Set ik model
         if (!pairInfo.ikSolver->setModel(pairInfo.pairModel)) {
-            yWarning() << LogPrefix << "failed to configure IK solver for the segment pair" << pairInfo.parentFrameName.c_str()
-                       << ", " << pairInfo.childFrameName.c_str() <<  " Skipping pair";
+            yWarning() << LogPrefix << "failed to configure IK solver for the segment pair"
+                       << pairInfo.parentFrameName.c_str() << ", "
+                       << pairInfo.childFrameName.c_str() << " Skipping pair";
             continue;
         }
 
         // Add parent link as fixed base constraint with identity transform
-        pairInfo.ikSolver->addFrameConstraint(pairInfo.parentFrameName, iDynTree::Transform::Identity());
+        pairInfo.ikSolver->addFrameConstraint(pairInfo.parentFrameName,
+                                              iDynTree::Transform::Identity());
 
         // Add child link as a target and set initial transform to be identity
         pairInfo.ikSolver->addTarget(pairInfo.childFrameName, iDynTree::Transform::Identity());
@@ -970,12 +979,15 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         pairInfo.costRegularization = costRegularization;
 
         // Get floating base for the pair model
-        pairInfo.floatingBaseIndex = pairInfo.pairModel.getFrameLink(pairInfo.pairModel.getFrameIndex(pairInfo.parentFrameName));
+        pairInfo.floatingBaseIndex = pairInfo.pairModel.getFrameLink(
+            pairInfo.pairModel.getFrameIndex(pairInfo.parentFrameName));
 
         // Set ik floating base
-        if (!pairInfo.ikSolver->setFloatingBaseOnFrameNamed(pairInfo.pairModel.getLinkName(pairInfo.floatingBaseIndex))) {
-            yError() << "Failed to set floating base frame for the segment pair" << pairInfo.parentFrameName.c_str()
-                     << ", " << pairInfo.childFrameName.c_str() <<  " Skipping pair";
+        if (!pairInfo.ikSolver->setFloatingBaseOnFrameNamed(
+                pairInfo.pairModel.getLinkName(pairInfo.floatingBaseIndex))) {
+            yError() << "Failed to set floating base frame for the segment pair"
+                     << pairInfo.parentFrameName.c_str() << ", " << pairInfo.childFrameName.c_str()
+                     << " Skipping pair";
             return false;
         }
 
@@ -989,21 +1001,23 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         // Resize to number of joints in the pair model
         solverJoints.resize(pairInfo.pairModel.getNrOfJoints());
 
-        for (int i=0; i < pairInfo.pairModel.getNrOfJoints(); i++) {
+        for (int i = 0; i < pairInfo.pairModel.getNrOfJoints(); i++) {
             solverJoints[i] = pairInfo.pairModel.getJointName(i);
         }
 
         pairInfo.consideredJointLocations.reserve(solverJoints.size());
-        for (auto &jointName: solverJoints) {
+        for (auto& jointName : solverJoints) {
             iDynTree::JointIndex jointIndex = humanModel.getJointIndex(jointName);
             if (jointIndex == iDynTree::JOINT_INVALID_INDEX) {
-                yWarning() << LogPrefix << "IK considered joint " << jointName << " not found in the complete model";
+                yWarning() << LogPrefix << "IK considered joint " << jointName
+                           << " not found in the complete model";
                 continue;
             }
             iDynTree::IJointConstPtr joint = humanModel.getJoint(jointIndex);
 
             // Save location index and length of each DoFs
-            pairInfo.consideredJointLocations.push_back(std::pair<size_t, size_t>(joint->getDOFsOffset(), joint->getNrOfDOFs()));
+            pairInfo.consideredJointLocations.push_back(
+                std::pair<size_t, size_t>(joint->getDOFsOffset(), joint->getNrOfDOFs()));
         }
 
         // Set the joint configurations size and initialize to zero
@@ -1020,7 +1034,8 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
         pairInfo.childFrameModelIndex = pairInfo.pairModel.getFrameIndex(pairInfo.childFrameName);
 
         // Configure KinDynComputation
-        pairInfo.kinDynComputations = std::unique_ptr<iDynTree::KinDynComputations>(new iDynTree::KinDynComputations());
+        pairInfo.kinDynComputations =
+            std::unique_ptr<iDynTree::KinDynComputations>(new iDynTree::KinDynComputations());
         pairInfo.kinDynComputations->loadRobotModel(pairInfo.pairModel);
 
         // Configure relative Jacobian
@@ -1032,9 +1047,7 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
     }
 
     // Initialize IK Worker Pool
-    ikPool = std::unique_ptr<IKWorkerPool>(new IKWorkerPool(ikPoolSize,
-                                                                             linkPairs,
-                                                                             segments));
+    ikPool = std::unique_ptr<IKWorkerPool>(new IKWorkerPool(ikPoolSize, linkPairs, segments));
     if (!ikPool) {
         yError() << LogPrefix << "failed to create IK worker pool";
         return false;
@@ -1052,21 +1065,21 @@ bool HumanStateProvider::impl::initializePairwisedInverseKinematicsSolver()
                 linkPair.sInitial.setVal(i, averageJointLimit);
             }
         }
-
     }
 
     return true;
 }
 
 bool HumanStateProvider::impl::initializeGlobalInverseKinematicsSolver()
-{           
+{
     // Set global ik parameters
     globalIK.setVerbosity(1);
     globalIK.setLinearSolverName(linearSolverName);
     globalIK.setMaxIterations(maxIterationsIK);
     globalIK.setCostTolerance(costTolerance);
     globalIK.setDefaultTargetResolutionMode(iDynTree::InverseKinematicsTreatTargetAsConstraintNone);
-    globalIK.setRotationParametrization(iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
+    globalIK.setRotationParametrization(
+        iDynTree::InverseKinematicsRotationParametrizationRollPitchYaw);
 
     if (!globalIK.setModel(humanModel)) {
         yError() << LogPrefix << "globalIK: failed to load the model";
@@ -1116,8 +1129,7 @@ bool HumanStateProvider::impl::initializeIntegrationBasedInverseKinematicsSolver
     jointLowerLimits.resize(humanModel.getNrOfDOFs());
     iDynTree::VectorDynSize jointUpperLimits;
     jointUpperLimits.resize(humanModel.getNrOfDOFs());
-    for (int jointIndex=0; jointIndex<humanModel.getNrOfDOFs(); jointIndex++)
-    {
+    for (int jointIndex = 0; jointIndex < humanModel.getNrOfDOFs(); jointIndex++) {
         jointLowerLimits.setVal(jointIndex, humanModel.getJoint(jointIndex)->getMinPosLimit(0));
         jointUpperLimits.setVal(jointIndex, humanModel.getJoint(jointIndex)->getMaxPosLimit(0));
     }
@@ -1171,15 +1183,19 @@ bool HumanStateProvider::impl::solvePairwisedInverseKinematicsSolver()
 
             // Check if it is a valid 1 DoF joint
             if (pairJoint.second == 1) {
-                jointConfigurationSolution.setVal(pairJoint.first, linkPair.jointConfigurations.getVal(jointIndex));
-                jointVelocitiesSolution.setVal(pairJoint.first, linkPair.jointVelocities.getVal(jointIndex));
+                jointConfigurationSolution.setVal(pairJoint.first,
+                                                  linkPair.jointConfigurations.getVal(jointIndex));
+                jointVelocitiesSolution.setVal(pairJoint.first,
+                                               linkPair.jointVelocities.getVal(jointIndex));
 
                 linkPair.sInitial.setVal(jointIndex,
                                          linkPair.jointConfigurations.getVal(jointIndex));
                 jointIndex++;
             }
             else {
-                yWarning() << LogPrefix << " Invalid DoFs for the joint, skipping the ik solution for this joint";
+                yWarning()
+                    << LogPrefix
+                    << " Invalid DoFs for the joint, skipping the ik solution for this joint";
                 continue;
             }
         }
@@ -1191,8 +1207,10 @@ bool HumanStateProvider::impl::solvePairwisedInverseKinematicsSolver()
 bool HumanStateProvider::impl::solveGlobalInverseKinematicsSolver()
 {
     // Set global IK initial condition
-    if (!globalIK.setFullJointsInitialCondition(&baseTransformSolution, &jointConfigurationSolution)) {
-        yError() << LogPrefix << "Failed to set the joint configuration for initializing the global IK";
+    if (!globalIK.setFullJointsInitialCondition(&baseTransformSolution,
+                                                &jointConfigurationSolution)) {
+        yError() << LogPrefix
+                 << "Failed to set the joint configuration for initializing the global IK";
         return false;
     }
 
@@ -1207,13 +1225,13 @@ bool HumanStateProvider::impl::solveGlobalInverseKinematicsSolver()
     posturalTaskJointAngles.resize(jointConfigurationSolution.size());
     posturalTaskJointAngles.zero();
     if (!globalIK.setDesiredFullJointsConfiguration(posturalTaskJointAngles, costRegularization)) {
-         yError() << LogPrefix << "Failed to set the postural configuration of the IK";
-         return false;
-     }
+        yError() << LogPrefix << "Failed to set the postural configuration of the IK";
+        return false;
+    }
 
     if (!globalIK.solve()) {
-            yError() << LogPrefix << "Failed to solve global IK";
-            return false;
+        yError() << LogPrefix << "Failed to solve global IK";
+        return false;
     }
 
     // Get the global inverse kinematics solution
@@ -1221,20 +1239,23 @@ bool HumanStateProvider::impl::solveGlobalInverseKinematicsSolver()
 
     // INVERSE VELOCITY KINEMATICS
     // Set joint configuration
-    if (!inverseVelocityKinematics.setConfiguration(baseTransformSolution, jointConfigurationSolution)) {
-        yError() << LogPrefix << "Failed to set the joint configuration for initializing the inverse velocity kinematics";
+    if (!inverseVelocityKinematics.setConfiguration(baseTransformSolution,
+                                                    jointConfigurationSolution)) {
+        yError() << LogPrefix
+                 << "Failed to set the joint configuration for initializing the inverse velocity "
+                    "kinematics";
         return false;
     }
 
     // Update ivk velocity targets based on wearable input data
-    if(!updateInverseVelocityKinematicTargets()) {
+    if (!updateInverseVelocityKinematicTargets()) {
         yError() << LogPrefix << "Failed to update the targets for the inverse velocity kinematics";
         return false;
     }
 
     if (!inverseVelocityKinematics.solve()) {
-            yError() << LogPrefix << "Failed to solve inverse velocity kinematics";
-            return false;
+        yError() << LogPrefix << "Failed to solve inverse velocity kinematics";
+        return false;
     }
 
     inverseVelocityKinematics.getVelocitySolution(baseVelocitySolution, jointVelocitiesSolution);
@@ -1244,28 +1265,30 @@ bool HumanStateProvider::impl::solveGlobalInverseKinematicsSolver()
 
 bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
 {
-    //compute timestep
+    // compute timestep
     double dt;
-    if (lastTime < 0.0)
-    {
+    if (lastTime < 0.0) {
         dt = period;
+        baseTransformSolution.setRotation(iDynTree::Rotation::Identity());
     }
-    else
-    {
-        dt = yarp::os::Time::now()-lastTime;
+    else {
+        dt = yarp::os::Time::now() - lastTime;
     };
     lastTime = yarp::os::Time::now();
 
     // LINK VELOCITY CORRECTION
-    iDynTree::KinDynComputations *computations = kinDynComputations.get();
+    iDynTree::KinDynComputations* computations = kinDynComputations.get();
 
-    if (useDirectBaseMeasurement)
-    {
-        computations->setRobotState(jointConfigurationSolution, jointVelocitiesSolution, worldGravity);
+    if (useDirectBaseMeasurement) {
+        computations->setRobotState(
+            jointConfigurationSolution, jointVelocitiesSolution, worldGravity);
     }
-    else
-    {
-        computations->setRobotState(baseTransformSolution, jointConfigurationSolution, baseVelocitySolution, jointVelocitiesSolution, worldGravity);
+    else {
+        computations->setRobotState(baseTransformSolution,
+                                    jointConfigurationSolution,
+                                    baseVelocitySolution,
+                                    jointVelocitiesSolution,
+                                    worldGravity);
     }
 
     for (size_t linkIndex = 0; linkIndex < humanModel.getNrOfLinks(); ++linkIndex) {
@@ -1273,67 +1296,106 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
 
         // skip fake links
         if (wearableStorage.modelToWearable_LinkName.find(linkName)
-                == wearableStorage.modelToWearable_LinkName.end()) {
+            == wearableStorage.modelToWearable_LinkName.end()) {
             continue;
         }
 
-        iDynTree::Rotation rotationError = computations->getWorldTransform(humanModel.getFrameIndex(linkName)).getRotation() * linkTransformMatrices[linkName].getRotation().inverse();
+        iDynTree::Rotation rotationError =
+            computations->getWorldTransform(humanModel.getFrameIndex(linkName)).getRotation()
+            * linkTransformMatrices[linkName].getRotation().inverse();
+
+        if (linkName == "root_link_fake" || linkName == "chest_fake" || linkName == "head_fake"
+            || linkName == "Head" || linkName == "Neck" || linkName == "Pelvis") {
+            yInfo() << "*******************************";
+            yInfo() << LogPrefix << " 2 " << linkName;
+            yInfo() << LogPrefix << " Rotation Error: " << rotationError.asRPY().toString();
+            yInfo() << LogPrefix << " computed Transform : "
+                    << computations->getWorldTransform(humanModel.getFrameIndex(linkName))
+                           .getRotation()
+                           .asRPY()
+                           .toString();
+
+            yInfo() << LogPrefix << " Sensor Transform : "
+                    << linkTransformMatrices[linkName].getRotation().asRPY().toString();
+        }
+
         iDynTree::Vector3 angularVelocityError;
 
         angularVelocityError = iDynTreeHelper::Rotation::skewVee(rotationError);
-        iDynTree::toEigen(integralOrientationError) = iDynTree::toEigen(integralOrientationError) +  iDynTree::toEigen(angularVelocityError) * dt;
+        iDynTree::toEigen(integralOrientationError) =
+            iDynTree::toEigen(integralOrientationError)
+            + iDynTree::toEigen(angularVelocityError) * dt;
 
-        // for floating base link use error also on position if not useDirectBaseMeasurement, otherwise skip the link
+        // for floating base link use error also on position if not useDirectBaseMeasurement,
+        // otherwise skip the link
         if (linkName == floatingBaseFrame.model) {
-           if (useDirectBaseMeasurement)
-           {
-               continue;
-           }
+            yInfo() << LogPrefix << "  >>>>>>>>>>>>>>>>>>>>>>>>>> base link name: " << linkName;
+            if (useDirectBaseMeasurement) {
+                continue;
+            }
 
-           iDynTree::Vector3 linearVelocityError;
-           linearVelocityError = computations->getWorldTransform(humanModel.getFrameIndex(linkName)).getPosition() - linkTransformMatrices[linkName].getPosition();
-           iDynTree::toEigen(integralLinearVelocityError) = iDynTree::toEigen(integralLinearVelocityError) +  iDynTree::toEigen(linearVelocityError) * dt;
-           for (int i=0; i<3; i++) {
-               linkVelocities[linkName].setVal(i, 0 * linkVelocities[linkName].getVal(i) - integrationBasedIKLinearCorrectionGain * linearVelocityError.getVal(i) - integrationBasedIKIntegralLinearCorrectionGain * integralLinearVelocityError.getVal(i));
-           }
+            iDynTree::Vector3 linearVelocityError;
+            linearVelocityError =
+                computations->getWorldTransform(humanModel.getFrameIndex(linkName)).getPosition()
+                - linkTransformMatrices[linkName]
+                      .getPosition(); // error of the position of the basis link
+            iDynTree::toEigen(integralLinearVelocityError) =
+                iDynTree::toEigen(integralLinearVelocityError)
+                + iDynTree::toEigen(linearVelocityError) * dt; // integtral of error
+            for (int i = 0; i < 3; i++) {
+                linkVelocities[linkName].setVal(i,
+                                                linkVelocities[linkName].getVal(i)
+                                                    - integrationBasedIKLinearCorrectionGain
+                                                          * linearVelocityError.getVal(i)
+                                                    - integrationBasedIKIntegralLinearCorrectionGain
+                                                          * integralLinearVelocityError.getVal(i));
+            }
         }
 
         // correct the links angular velocities
-        for (int i=3; i<6; i++) {
-            linkVelocities[linkName].setVal(i, 0 * linkVelocities[linkName].getVal(i) -  integrationBasedIKAngularCorrectionGain * angularVelocityError.getVal(i-3) -  integrationBasedIKIntegralAngularCorrectionGain  * integralOrientationError.getVal(i-3));
+        for (int i = 3; i < 6; i++) {
+            linkVelocities[linkName].setVal(i,
+                                            linkVelocities[linkName].getVal(i)
+                                                - integrationBasedIKAngularCorrectionGain
+                                                      * angularVelocityError.getVal(i - 3)
+                                                - integrationBasedIKIntegralAngularCorrectionGain
+                                                      * integralOrientationError.getVal(i - 3));
         }
     }
 
     // INVERSE VELOCITY KINEMATICS
     // Set joint configuration
-    if (!inverseVelocityKinematics.setConfiguration(baseTransformSolution, jointConfigurationSolution)) {
-        yError() << LogPrefix << "Failed to set the joint configuration for initializing the global IK";
+    if (!inverseVelocityKinematics.setConfiguration(baseTransformSolution,
+                                                    jointConfigurationSolution)) {
+        yError() << LogPrefix
+                 << "Failed to set the joint configuration for initializing the global IK";
         return false;
     }
 
     // Update ivk velocity targets based on wearable input data
-    if(!updateInverseVelocityKinematicTargets()) {
+    if (!updateInverseVelocityKinematicTargets()) {
         return false;
     }
 
     if (!inverseVelocityKinematics.solve()) {
-            yError() << LogPrefix << "Failed to solve inverse velocity kinematics";
-            return false;
+        yError() << LogPrefix << "Failed to solve inverse velocity kinematics";
+        return false;
     }
 
     inverseVelocityKinematics.getVelocitySolution(baseVelocitySolution, jointVelocitiesSolution);
 
     // VELOCITY INTEGRATION
     // integrate velocities measurements
-    if (!useDirectBaseMeasurement)
-    {
-        stateIntegrator.integrate(jointVelocitiesSolution, baseVelocitySolution.getLinearVec3(), baseVelocitySolution.getAngularVec3(), dt);
+    if (!useDirectBaseMeasurement) {
+        stateIntegrator.integrate(jointVelocitiesSolution,
+                                  baseVelocitySolution.getLinearVec3(),
+                                  baseVelocitySolution.getAngularVec3(),
+                                  dt);
 
         stateIntegrator.getJointConfiguration(jointConfigurationSolution);
         stateIntegrator.getBasePose(baseTransformSolution);
     }
-    else
-    {
+    else {
         stateIntegrator.integrate(jointVelocitiesSolution, dt);
 
         stateIntegrator.getJointConfiguration(jointConfigurationSolution);
@@ -1521,7 +1583,9 @@ bool HumanStateProvider::impl::computeLinksOrientationErrors(
 
     for (const auto& linkMapEntry : linkDesiredTransforms) {
         const ModelLinkName& linkName = linkMapEntry.first;
-        linkErrorOrientations[linkName] = iDynTreeHelper::Rotation::rotationDistance(computations->getWorldTransform(linkName).getRotation(), linkDesiredTransforms[linkName].getRotation());
+        linkErrorOrientations[linkName] = iDynTreeHelper::Rotation::rotationDistance(
+            computations->getWorldTransform(linkName).getRotation(),
+            linkDesiredTransforms[linkName].getRotation());
     }
     return true;
 }

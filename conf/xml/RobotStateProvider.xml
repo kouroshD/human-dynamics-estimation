@@ -21,7 +21,7 @@
         <param name="urdf">teleoperation_iCub_model_V_2_5.urdf</param>
         <param name="floatingBaseFrame">(root_link_fake, XsensSuit::vLink::Pelvis)</param>
         <!-- ikSolver options: pairwised, global, integrationbased -->
-        <param name="ikSolver">pairwised</param>
+        <param name="ikSolver">integrationbased</param>
         <param name="useXsensJointsAngles">false</param>
         <param name="allowIKFailures">true</param>
         <param name="useDirectBaseMeasurement">false</param>
@@ -33,11 +33,11 @@
         <param name="rotTargetWeight">1.0</param>
         <param name="costRegularization">0.001</param>
         <param name="costTolerance">0.001</param>
-        <!-- inverse velocity kinematics parameters -->
+        <!-- inverse velocity kinematics parameters , in optimization problem-->
         <param name="linVelTargetWeight">0.0</param>
         <param name="angVelTargetWeight">1.0</param>
-        <!-- integration based IK parameters -->
-        <param name="integrationBasedIKCorrectionGainsLinRot">(1.0 1.0)</param>
+        <!-- integration based IK parameters , is used as PI gains for correction and computing the error-->
+        <param name="integrationBasedIKCorrectionGainsLinRot">(3.0 3.0)</param>
         <param name="integrationBasedIKIntegralCorrectionGainsLinRot">(0.0 0.0)</param>
         <group name="MODEL_TO_DATA_LINK_NAMES">
             <param name="map_Pelvis">(root_link_fake, XsensSuit::vLink::Pelvis)</param>
