@@ -273,11 +273,11 @@ bool InverseVelocityKinematics::impl::solveProblem()
     }
     yInfo() << "******************************** solveProblem- 6";
 
-    //    yInfo() << "IB-IK, normal: ";
-    //    for (int k = 0; k < nu.size(); k++) {
-    //        std::cout << nu.getVal(k) << " ";
-    //    }
-    //    std::cout << std::endl;
+    yInfo() << "IB-IK, normal: ";
+    for (int k = 0; k < nu.size(); k++) {
+        std::cout << nu.getVal(k) << " ";
+    }
+    std::cout << std::endl;
 
     return true;
 }
@@ -478,6 +478,7 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
                     << jointVelocityResult.getVal(7) << " " << jointVelocityResult.getVal(8);
             // update upper/lower boundary vector for configuration space constraints
             // previous nu results: jointVelocityResult
+            yInfo() << "configSpaceNumberOfConstraints: " << configSpaceNumberOfConstraints;
             for (unsigned i = 0; i < configSpaceNumberOfConstraints; i++) {
 
                 yInfo() << "A' size: " << m_A_prime.rows() << " " << m_A_prime.cols();
@@ -531,7 +532,10 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
             // prepare constraint matrix, upper/lower bound to set it in qp optimizer solver
             Eigen::SparseMatrix<double> constraintMatrix =
                 iDynTree::toEigen(m_A_prime).sparseView();
-            yInfo() << "16";
+
+            std::cout << "m_u_prime: \n" << iDynTree::toEigen(m_u_prime).transpose() << std::endl;
+            std::cout << "m_l_prime: \n" << iDynTree::toEigen(m_l_prime).transpose() << std::endl;
+
             auto upperBuond = iDynTree::toEigen(m_u_prime);
             auto lowerBuond = iDynTree::toEigen(m_l_prime);
             yInfo() << "17";
@@ -550,7 +554,7 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
         }
         yInfo() << "19";
 
-        //        Eigen::VectorXd QPSolution;
+        Eigen::VectorXd QPSolution;
         // solve the QP problem   fullVelocityBuffer
         if (!m_optimizerSolver->solve()) {
             yError() << "[InverseVelocityKinematics::impl::solveIntegrationBasedIK] "
@@ -560,16 +564,17 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
         }
 
         // get the controller input
-        //        QPSolution = m_optimizerSolver->getSolution();
+        QPSolution = m_optimizerSolver->getSolution();
 
-        //    yInfo() << "IB-IK qp: ";
-        //    for (unsigned int i = 0; i < configSpaceSize; i++) {
-        //        std::cout << QPSolution.coeff(i, 0) << " ";
-        //    }
-        //    std::cout << std::endl;
+        yInfo() << "IB-IK qp: ";
+        for (unsigned int i = 0; i < configSpaceSize; i++) {
+            std::cout << QPSolution.coeff(i, 0) << " ";
+        }
+        std::cout << std::endl;
 
         //        iDynTree::toEigen(outputVector) = QPSolution.topRows(configSpaceSize);
-        iDynTree::toEigen(outputVector) = m_optimizerSolver->getSolution().topRows(configSpaceSize);
+        //// iDynTree::toEigen(outputVector) =
+        /// m_optimizerSolver->getSolution().topRows(configSpaceSize);
         //        yInfo() << "running qp";
 
         //**********************************
@@ -636,17 +641,17 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
                 .solve(iDynTree::toEigen(matrix).transpose() * weightInverse.toDenseMatrix()
                        * iDynTree::toEigen(inputVector));
     }
-    else if (resolutionMode == sparseRobustCholeskyDecomposition) {
-        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
-        solver.compute((iDynTree::toEigen(matrix).transpose() * weightInverse.toDenseMatrix()
-                            * iDynTree::toEigen(matrix)
-                        + iDynTree::toEigen(regularizationMatrix))
-                           .sparseView());
+    //    else if (resolutionMode == sparseRobustCholeskyDecomposition) {
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+    solver.compute((iDynTree::toEigen(matrix).transpose() * weightInverse.toDenseMatrix()
+                        * iDynTree::toEigen(matrix)
+                    + iDynTree::toEigen(regularizationMatrix))
+                       .sparseView());
 
-        iDynTree::toEigen(outputVector) =
-            solver.solve(iDynTree::toEigen(matrix).transpose() * weightInverse.toDenseMatrix()
-                         * iDynTree::toEigen(inputVector));
-    }
+    iDynTree::toEigen(outputVector) =
+        solver.solve(iDynTree::toEigen(matrix).transpose() * weightInverse.toDenseMatrix()
+                     * iDynTree::toEigen(inputVector));
+    //    }
 
     return true;
 }
@@ -983,8 +988,8 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
                                                        numberOfTargetVariables) =
             Eigen::MatrixXd::Zero(totalNumberOfConstraints, numberOfTargetVariables);
         // generate upper limit vector (u_prime) and lower limit vector (l_prime)
-        m_l = iDynTree::VectorDynSize(totalNumberOfConstraints);
-        m_u = iDynTree::VectorDynSize(totalNumberOfConstraints);
+        //        m_l = iDynTree::VectorDynSize(totalNumberOfConstraints);
+        //        m_u = iDynTree::VectorDynSize(totalNumberOfConstraints);
 
         // to implement, get velocity vector limit from the configuration files
         //        double jointVelocityLimit = 10.0;
@@ -1016,6 +1021,21 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
         //    Eigen::VectorXd q_prime(numberOfTargetVariables + configSpaceSize);
         m_q_prime = iDynTree::VectorDynSize(numberOfTargetVariables + configSpaceSize);
         iDynTree::toEigen(m_q_prime).setZero();
+
+        std::cout << "base upper limit:\n"
+                  << iDynTree::toEigen(m_custom_baseVelocityUpperLimit).transpose() << std::endl;
+        std::cout << "base lower limit:\n "
+                  << iDynTree::toEigen(m_custom_baseVelocityLowerLimit).transpose() << std::endl;
+
+        std::cout << "m_u:\n" << iDynTree::toEigen(m_u).transpose() << std::endl;
+        std::cout << "m_l:\n" << iDynTree::toEigen(m_l).transpose() << std::endl;
+
+        std::cout << "m_u_prime: \n" << iDynTree::toEigen(m_u_prime).transpose() << std::endl;
+        std::cout << "m_l_prime: \n" << iDynTree::toEigen(m_l_prime).transpose() << std::endl;
+
+        std::cout << "A:\n" << iDynTree::toEigen(m_A) << std::endl;
+        std::cout << "A':\n " << iDynTree::toEigen(m_A_prime) << std::endl;
+        std::cout << "P':\n " << iDynTree::toEigen(m_P_prime) << std::endl;
 
         // set A
         Eigen::SparseMatrix<double> constraintMatrix = iDynTree::toEigen(m_A_prime).sparseView();
@@ -1071,6 +1091,7 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
         // controller QPSolution vector
         //   Eigen::VectorXd QPSolution;
     }
+    //    exit(0);
 }
 
 // ===================

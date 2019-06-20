@@ -853,8 +853,8 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
             pImpl->custom_jointsVelocityLimitsIndexes, pImpl->custom_jointsVelocityLimitsValues);
     }
     if (pImpl->baseVelocityUpperLimit.size() != 0) {
-        pImpl->inverseVelocityKinematics.setCustomBaseVelocityLimit(pImpl->baseVelocityUpperLimit,
-                                                                    pImpl->baseVelocityLowerLimit);
+        pImpl->inverseVelocityKinematics.setCustomBaseVelocityLimit(pImpl->baseVelocityLowerLimit,
+                                                                    pImpl->baseVelocityUpperLimit);
     }
     if (pImpl->customConstraintVariablesIndex.size() != 0) {
         pImpl->inverseVelocityKinematics.setCustomConstraintsJointsValues(
