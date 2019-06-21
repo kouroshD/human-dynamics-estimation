@@ -207,6 +207,7 @@ public:
     iDynTree::VectorDynSize customConstraintLowerBound; // lowerBound, Cx1 Vector
     iDynTree::VectorDynSize baseVelocityUpperLimit;
     iDynTree::VectorDynSize baseVelocityLowerLimit;
+    double k_u, k_l;
 
     SolverIK ikSolver;
 
@@ -684,6 +685,8 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
     pImpl->custom_jointsVelocityLimitsNames.resize(0);
     pImpl->custom_jointsVelocityLimitsValues.resize(0);
     pImpl->custom_jointsVelocityLimitsIndexes.resize(0);
+    pImpl->k_u = 0.0;
+    pImpl->k_l = 0.0;
 
     yInfo() << "==================>>>>>>> constraint group: " << constraintGroup.size();
 
@@ -804,6 +807,18 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
                 yInfo() << pImpl->baseVelocityLowerLimit.getVal(i);
             }
         } // another option
+        else if (constraintKey == "k_u") {
+            if (constraintGroup.check("k_u") && constraintGroup.find("k_u").isDouble()) {
+                pImpl->k_u = constraintGroup.find("k_u").asDouble();
+                yInfo() << "k_u: " << pImpl->k_u;
+            }
+        } // another option
+        else if (constraintKey == "k_l") {
+            if (constraintGroup.check("k_l") && constraintGroup.find("k_l").isDouble()) {
+                pImpl->k_u = constraintGroup.find("k_l").asDouble();
+                yInfo() << "k_l: " << pImpl->k_u;
+            }
+        } // another option
         else {
             yError() << LogPrefix << "the parameter key is not defined: " << constraintKey;
             return false;
@@ -861,7 +876,9 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
             pImpl->customConstraintVariablesIndex,
             pImpl->customConstraintUpperBound,
             pImpl->customConstraintLowerBound,
-            pImpl->customConstraintMatrix);
+            pImpl->customConstraintMatrix,
+            pImpl->k_u,
+            pImpl->k_l);
     }
 
     pImpl->inverseVelocityKinematics.setGeneralJointVelocityConstraints(

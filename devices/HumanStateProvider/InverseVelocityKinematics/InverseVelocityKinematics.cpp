@@ -48,10 +48,10 @@ public:
     iDynTree::VectorDynSize m_custom_ConstraintUpperBound; // upperBuond, cx1 Vector
     iDynTree::VectorDynSize m_custom_ConstraintLowerBound; // lowerBound, cx1 Vector
     double m_generalJointVelocityLimit;
+    double m_k_u, m_k_l;
 
     iDynTree::VectorDynSize m_JointConfigSpaceConstraintsMax;
     iDynTree::VectorDynSize m_JointConfigSpaceConstraintsMin;
-    double k_u, k_l;
 
     struct
     {
@@ -463,7 +463,8 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
             // previous nu results: jointVelocityResult
             for (unsigned i = 0; i < configSpaceNumberOfConstraints; i++) {
 
-                //                iDynTree::toEigen(tmp_configConstraint_vector)
+                // check issue #132
+                // get the vector 'b' to compute tanh function
                 Eigen::MatrixXd tmp_mat =
                     iDynTree::toEigen(m_A_prime)
                         .block(numberOfTargetVariables + totalNumberOfConstraints
@@ -480,11 +481,11 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
 
                 double tmp_upperBound =
                     m_JointConfigSpaceConstraintsMax(i)
-                    * std::tanh(k_u * (m_custom_ConstraintUpperBound(i) - tmp_bXq));
+                    * std::tanh(m_k_u * (m_custom_ConstraintUpperBound(i) - tmp_bXq));
 
                 double tmp_lowerBound =
                     m_JointConfigSpaceConstraintsMin(i)
-                    * std::tanh(k_l * (tmp_bXq - m_custom_ConstraintLowerBound(i)));
+                    * std::tanh(m_k_l * (tmp_bXq - m_custom_ConstraintLowerBound(i)));
 
                 // last |configSpaceNumberOfConstraints| rows are related to config space limits
                 m_u_prime.setVal(numberOfTargetVariables + totalNumberOfConstraints
@@ -756,6 +757,7 @@ void InverseVelocityKinematics::impl::prepareWeightVector()
 }
 void InverseVelocityKinematics::impl::prepareOptimizer()
 {
+    yInfo() << "********************** prepareOptimizer";
     baseDofs = 0;
     configSpaceSize = 0;
     totalNumberOfConstraints = 0;
@@ -858,8 +860,6 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
             m_u.resize(totalNumberOfConstraints);
             m_l.zero();
             m_u.zero();
-            k_u = 1.0;
-            k_l = 1.0;
             iDynTree::toEigen(m_u).topRows(totalNumberOfConstraints
                                            - configSpaceNumberOfConstraints) =
                 iDynTree::toEigen(tmp_m_u);
@@ -959,13 +959,13 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
         //                  << iDynTree::toEigen(m_custom_baseVelocityLowerLimit).transpose() <<
         //                  std::endl;
 
-        std::cout << "m_u:\n" << iDynTree::toEigen(m_u).transpose() << std::endl;
-        std::cout << "m_l:\n" << iDynTree::toEigen(m_l).transpose() << std::endl;
+        //        std::cout << "m_u:\n" << iDynTree::toEigen(m_u).transpose() << std::endl;
+        //        std::cout << "m_l:\n" << iDynTree::toEigen(m_l).transpose() << std::endl;
 
         // std::cout << "m_u_prime: \n" << iDynTree::toEigen(m_u_prime).transpose() << std::endl;
         // std::cout << "m_l_prime: \n" << iDynTree::toEigen(m_l_prime).transpose() << std::endl;
 
-        std::cout << "A:\n" << iDynTree::toEigen(m_A) << std::endl;
+        //        std::cout << "A:\n" << iDynTree::toEigen(m_A) << std::endl;
         //        std::cout << "A':\n " << iDynTree::toEigen(m_A_prime) << std::endl;
         //        std::cout << "P':\n " << iDynTree::toEigen(m_P_prime) << std::endl;
 
@@ -1482,12 +1482,16 @@ bool InverseVelocityKinematics::setCustomConstraintsJointsValues(
     std::vector<iDynTree::JointIndex> jointsIndexList,
     iDynTree::VectorDynSize upperBoundary,
     iDynTree::VectorDynSize lowerBoundary,
-    iDynTree::MatrixDynSize customConstraintMatrix)
+    iDynTree::MatrixDynSize customConstraintMatrix,
+    double k_u,
+    double k_l)
 {
     pImpl->m_custom_ConstraintVariablesIndex = jointsIndexList;
     pImpl->m_custom_ConstraintMatrix = customConstraintMatrix;
     pImpl->m_custom_ConstraintUpperBound = upperBoundary;
     pImpl->m_custom_ConstraintLowerBound = lowerBoundary;
+    pImpl->m_k_u = k_u;
+    pImpl->m_k_l = k_l;
     return true;
 }
 
