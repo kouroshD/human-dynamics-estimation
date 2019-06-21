@@ -1588,7 +1588,6 @@ bool HumanStateProvider::impl::solveGlobalInverseKinematicsSolver()
 bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
 {
     // compute timestep
-    yInfo() << "******************************** 1";
     double dt;
     if (lastTime < 0.0) {
         dt = period;
@@ -1597,7 +1596,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
         dt = yarp::os::Time::now() - lastTime;
     };
     lastTime = yarp::os::Time::now();
-    yInfo() << "******************************** 2";
 
     // LINK VELOCITY CORRECTION
     iDynTree::KinDynComputations* computations = kinDynComputations.get();
@@ -1613,7 +1611,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
                                     jointVelocitiesSolution,
                                     worldGravity);
     }
-    yInfo() << "******************************** 3";
 
     for (size_t linkIndex = 0; linkIndex < humanModel.getNrOfLinks(); ++linkIndex) {
         std::string linkName = humanModel.getLinkName(linkIndex);
@@ -1669,7 +1666,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
                           * integralOrientationError.getVal(i - 3));
         }
     }
-    yInfo() << "******************************** 3";
 
     // INVERSE VELOCITY KINEMATICS
     // Set joint configuration
@@ -1684,7 +1680,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
     if (!updateInverseVelocityKinematicTargets()) {
         return false;
     }
-    yInfo() << "******************************** 4";
 
     if (!inverseVelocityKinematics.solve()) {
         yError() << LogPrefix << "Failed to solve inverse velocity kinematics";
@@ -1709,7 +1704,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
             jointVelocitiesSolution.setVal(i, -1.0 * integrationBasedJointVelocityLimit);
         }
     }
-    yInfo() << "******************************** 5";
 
     // VELOCITY INTEGRATION
     // integrate velocities measurements
@@ -1727,8 +1721,6 @@ bool HumanStateProvider::impl::solveIntegrationBasedInverseKinematics()
 
         stateIntegrator.getJointConfiguration(jointConfigurationSolution);
     }
-    yInfo() << "******************************** 6";
-
     return true;
 }
 
