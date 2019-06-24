@@ -815,8 +815,8 @@ bool HumanStateProvider::open(yarp::os::Searchable& config)
         } // another option
         else if (constraintKey == "k_l") {
             if (constraintGroup.check("k_l") && constraintGroup.find("k_l").isDouble()) {
-                pImpl->k_u = constraintGroup.find("k_l").asDouble();
-                yInfo() << "k_l: " << pImpl->k_u;
+                pImpl->k_l = constraintGroup.find("k_l").asDouble();
+                yInfo() << "k_l: " << pImpl->k_l;
             }
         } // another option
         else {

@@ -49,6 +49,7 @@ public:
     iDynTree::VectorDynSize m_custom_ConstraintLowerBound; // lowerBound, cx1 Vector
     double m_generalJointVelocityLimit;
     double m_k_u, m_k_l;
+    Eigen::MatrixXd coefVectorCustomConstraints;
 
     iDynTree::VectorDynSize m_JointConfigSpaceConstraintsMax;
     iDynTree::VectorDynSize m_JointConfigSpaceConstraintsMin;
@@ -465,6 +466,7 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
 
                 // check issue #132
                 // get the vector 'b' to compute tanh function
+                // coefVectorCustomConstraints =
                 Eigen::MatrixXd tmp_mat =
                     iDynTree::toEigen(m_A_prime)
                         .block(numberOfTargetVariables + totalNumberOfConstraints
@@ -486,6 +488,12 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
                 double tmp_lowerBound =
                     m_JointConfigSpaceConstraintsMin(i)
                     * std::tanh(m_k_l * (tmp_bXq - m_custom_ConstraintLowerBound(i)));
+                //                std::cout << "1: " << tmp_lowerBound
+                //                          << " 2: " << m_JointConfigSpaceConstraintsMin(i) << "
+                //                          3:" << m_k_l
+                //                          << " 4: " << tmp_bXq << "  5: " <<
+                //                          m_custom_ConstraintLowerBound(i)
+                //                          << std::endl;
 
                 // last |configSpaceNumberOfConstraints| rows are related to config space limits
                 m_u_prime.setVal(numberOfTargetVariables + totalNumberOfConstraints
@@ -502,6 +510,9 @@ bool InverseVelocityKinematics::impl::solveIntegrationBasedIK(
 
             auto upperBuond = iDynTree::toEigen(m_u_prime);
             auto lowerBuond = iDynTree::toEigen(m_l_prime);
+            //            std::cout << "upper bound: \n" << iDynTree::toEigen(m_u_prime).transpose()
+            //            << std::endl; std::cout << "lower bound: \n" <<
+            //            iDynTree::toEigen(m_l_prime).transpose() << std::endl;
 
             if (!m_optimizerSolver->updateBounds(lowerBuond, upperBuond)) {
                 yError() << "[InverseVelocityKinematics::impl::solveIntegrationBasedIK] "
@@ -896,6 +907,7 @@ void InverseVelocityKinematics::impl::prepareOptimizer()
             iDynTree::toEigen(m_A).bottomRows(configSpaceNumberOfConstraints) =
                 iDynTree::toEigen(jointValuesConstraintsMatrix);
         }
+        coefVectorCustomConstraints.resize(1, dofs);
         //*******************************************//
         //*******************************************//
 
