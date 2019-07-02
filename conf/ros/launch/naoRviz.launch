@@ -1,0 +1,15 @@
+<launch>
+    <arg name="Robot"/>
+    <arg name="gui" default="False"/>
+    <arg name="vel" default="True"/>
+    <arg name="eff" default="True"/>
+    <arg name="robotModel" default="C:\Users\icub\dev\robotology-superbuild\build\install\share\retargeting-robot-models\robots\nao\model.urdf"/>
+    <arg name="rvizconfig" default="C:\Users\icub\dev\human-dynamics-estimation\conf\ros\rviz\naoRviz.rviz" />
+
+    <param name="robot_description" command="$(find xacro)/xacro.py $(arg robotModel)" />
+    <param name="use_gui" value="$(arg gui)"/>
+
+    <!--node name="rviz" pkg="rviz" type="rviz" required="true" /-->
+ <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+</launch>
