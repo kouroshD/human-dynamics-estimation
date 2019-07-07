@@ -136,7 +136,7 @@
 
     <device type="human_state_publisher" name="RobotStatePublisher">
         <param name="period">0.02</param>
-        <param name="baseTFName">/Robot/base_link</param>
+        <param name="baseTFName">/Robot/pelvis</param>
         <param name="humanJointsTopic">/Robot/joint_states</param>
         <action phase="startup" level="5" type="attach">
             <paramlist name="networks">
